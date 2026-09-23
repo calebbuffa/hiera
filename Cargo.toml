@@ -1,8 +1,16 @@
 [package]
-name = "kiba"
+name = "hiera"
 version = "0.1.0"
 edition = "2024"
-repository = "github.com/calebbuffa/kiba"
+license = "Apache-2.0"
+repository = "https://github.com/calebbuffa/hiera"
+description = "Demand-driven loading and path-aware navigation for hierarchical spatial data"
+keywords = ["3d-tiles", "gltf", "hierarchy", "spatial"]
+categories = ["data-structures", "graphics", "science::geo"]
 
 [dependencies]
+bytes = "1"
 thiserror = "2.0.20"
+
+[dev-dependencies]
+futures = "0.3"
