@@ -3,10 +3,7 @@
 Hiera provides demand-driven loading and path-aware navigation for
 hierarchical spatial data.
 
-It is the shared, format-neutral foundation for loaders such as I3S, 3D
-Tiles, COPC, and glTF. Hiera owns retained item handles, shallow expansion,
-content loading, cursor ancestry, and stable item identity. Format crates own
-their source model and define the context accumulated while navigating it.
+It is intended to be a  shared, format-neutral foundation for loaders such as I3S, 3D Tiles, COPC, and glTF. Hiera owns retained item handles, shallow expansion, content loading, cursor ancestry, and stable item identity. Format crates own the implementation details.
 
 ## Core model
 
