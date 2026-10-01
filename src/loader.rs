@@ -50,7 +50,9 @@ pub type FetchFuture = Pin<Box<dyn Future<Output = Result<FetchResponse, FetchEr
 ///
 /// Loaders receive this callback from an application so they can resolve
 /// format-specific resources without choosing an HTTP, filesystem, archive,
-/// cache, or authentication implementation.
+/// cache, authentication, runtime, worker, or scheduling implementation.
+/// The application decides where this future is polled and must arrange any
+/// blocking I/O outside its foreground thread.
 pub type Fetch = std::sync::Arc<dyn Fn(FetchRequest) -> FetchFuture + Send + Sync>;
 
 /// Future returned by [`Loader::root`].
@@ -81,6 +83,7 @@ pub struct Expansion<I, C> {
 
 /// The result of loading one content reference.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum LoadOutcome<T> {
     /// Content was loaded successfully.
     Ready(T),
@@ -124,7 +127,9 @@ pub trait Loader: Send + Sync {
     /// project it into bounds and transforms, while another consumer may use
     /// it for a wholly different purpose.
     type ItemInfo: Send + Sync + 'static;
-    /// Decoded or raw content returned by [`Self::load`].
+    /// Source-native content returned by [`Self::load`].
+    ///
+    /// A loader does not prescribe payload decoding or execution policy.
     type Content: Send + 'static;
     /// Error produced by source access or format interpretation.
     type Error: std::error::Error + Send + Sync + 'static;

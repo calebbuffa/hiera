@@ -3,7 +3,7 @@
 Hiera provides demand-driven loading and path-aware navigation for
 hierarchical spatial data.
 
-It is intended to be a  shared, format-neutral foundation for loaders such as I3S, 3D Tiles, COPC, and glTF. Hiera owns retained item handles, shallow expansion, content loading, cursor ancestry, and stable item identity. Format crates own the implementation details.
+It is intended to be a shared, format-neutral foundation for loaders such as I3S, 3D Tiles, COPC, and glTF. Hiera owns retained item handles, shallow expansion, content loading, cursor ancestry, and stable item identity. Format crates own the implementation details.
 
 ## Core model
 
@@ -69,8 +69,3 @@ let root = navigator.root().await.unwrap();
 assert_eq!(root.item_id(), 0);
 # }
 ```
-
-## Status
-
-Hiera is an early `0.1` release. Its public API is intended for hierarchical
-spatial sources, but may evolve as additional formats establish common needs.

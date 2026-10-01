@@ -143,6 +143,50 @@ where
         }
     }
 
+    /// Creates a navigator whose state derivation is synchronous.
+    ///
+    /// Use this when effective state is a pure function of the already-loaded
+    /// item and its description, which is the common case. Formats that must
+    /// resolve additional source-native data while deriving state should use
+    /// [`Navigator::new`] instead.
+    pub fn with_sync_state<Root, Child>(loader: L, derive_root: Root, derive_child: Child) -> Self
+    where
+        Root: Fn(&L, &L::Item, &L::ItemInfo) -> Result<S, L::Error> + Send + Sync + 'static,
+        Child: Fn(&L, &Cursor<L, S>, &L::Item, &L::ItemInfo) -> Result<S, L::Error>
+            + Send
+            + Sync
+            + 'static,
+    {
+        Self::from_shared_sync_state(Arc::new(loader), derive_root, derive_child)
+    }
+
+    /// Creates a navigator from a shared loader with synchronous state
+    /// derivation.
+    pub fn from_shared_sync_state<Root, Child>(
+        loader: Arc<L>,
+        derive_root: Root,
+        derive_child: Child,
+    ) -> Self
+    where
+        Root: Fn(&L, &L::Item, &L::ItemInfo) -> Result<S, L::Error> + Send + Sync + 'static,
+        Child: Fn(&L, &Cursor<L, S>, &L::Item, &L::ItemInfo) -> Result<S, L::Error>
+            + Send
+            + Sync
+            + 'static,
+    {
+        Self::from_shared(
+            loader,
+            move |loader: &L, item: &L::Item, info: &L::ItemInfo| {
+                let state = derive_root(loader, item, info);
+                Box::pin(std::future::ready(state)) as StateFuture<S, L::Error>
+            },
+            move |loader: &L, parent: &Cursor<L, S>, item: &L::Item, info: &L::ItemInfo| {
+                let state = derive_child(loader, parent, item, info);
+                Box::pin(std::future::ready(state)) as StateFuture<S, L::Error>
+            },
+        )
+    }
+
     /// Returns the underlying demand loader.
     pub fn loader(&self) -> &L {
         &self.inner.loader

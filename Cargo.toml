@@ -1,7 +1,9 @@
 [package]
 name = "hiera"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
+rust-version = "1.85"
+readme = "README.md"
 license = "Apache-2.0"
 repository = "https://github.com/calebbuffa/hiera"
 description = "Demand-driven loading and path-aware navigation for hierarchical spatial data"

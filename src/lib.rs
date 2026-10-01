@@ -3,10 +3,8 @@
 //!
 //! Hiera defines format-neutral mechanics for sources such as 3D Tiles, I3S,
 //! COPC, and glTF. A [`Loader`] owns source-specific loading and shallow
-//! expansion. A format-specific [`Reader`] decorates a loader with typed
-//! reads while retaining all loader functionality. A [`Navigator`] turns a loader into
-//! retainable [`Cursor`] values whose effective state is derived by the
-//! format or application.
+//! expansion. A [`Navigator`] turns a loader into retainable [`Cursor`] values
+//! whose effective state is derived by the format or application.
 //!
 //! Hiera does not interpret bounds, transforms, level of detail, metadata, or
 //! content formats. Those semantics belong to the format crate's loader and
@@ -58,16 +56,59 @@
 //! assert_eq!(root.item_id(), 0);
 //! # }
 //! ```
+//!
+//! Most formats derive effective state from data the loader has already
+//! produced. Those should use [`Navigator::with_sync_state`], which takes
+//! plain fallible closures instead of futures:
+//!
+//! ```
+//! # use hiera::{Expansion, LoadOutcome, Loader, Navigator};
+//! # use std::convert::Infallible;
+//! # #[derive(Clone)]
+//! # struct Source;
+//! # impl Loader for Source {
+//! #     type Item = u8;
+//! #     type ItemId = u8;
+//! #     type ContentRef = ();
+//! #     type ItemInfo = ();
+//! #     type Content = ();
+//! #     type Error = Infallible;
+//! #     fn root(&self) -> hiera::RootFuture<Self::Item, Self::Error> {
+//! #         Box::pin(async { Ok(0) })
+//! #     }
+//! #     fn item_id(&self, item: &Self::Item) -> Self::ItemId {
+//! #         *item
+//! #     }
+//! #     fn describe(&self, _: Self::Item) -> hiera::DescribeFuture<Self::ItemInfo, Self::Error> {
+//! #         Box::pin(async { Ok(()) })
+//! #     }
+//! #     fn expand(&self, _: Self::Item) -> hiera::ExpandFuture<Self::Item, Self::ContentRef, Self::Error> {
+//! #         Box::pin(async { Ok(Expansion { children: vec![], contents: vec![] }) })
+//! #     }
+//! #     fn load(&self, _: Self::ContentRef) -> hiera::LoadFuture<Self::Content, Self::Error> {
+//! #         Box::pin(async { Ok(LoadOutcome::Empty) })
+//! #     }
+//! # }
+//! # async fn sync_example() {
+//! let navigator = Navigator::with_sync_state(
+//!     Source,
+//!     |_, item: &u8, _| Ok::<_, Infallible>(u32::from(*item)),
+//!     |_, _, item: &u8, _| Ok::<_, Infallible>(u32::from(*item)),
+//! );
+//! let root = navigator.root().await.unwrap();
+//! assert_eq!(*root.state(), 0);
+//! # }
+//! ```
 
 #![warn(missing_docs)]
 
+mod execution;
 mod loader;
 mod navigator;
-mod reader;
 
+pub use execution::{InlineSpawner, SpawnError, Spawner, spawn};
 pub use loader::{
     BoxFuture, ByteRange, Bytes, DescribeFuture, ExpandFuture, Expansion, Fetch, FetchError,
     FetchFuture, FetchRequest, FetchResponse, LoadFuture, LoadOutcome, Loader, RootFuture,
 };
 pub use navigator::{ChildState, Cursor, CursorExpansion, Navigator, RootState, StateFuture};
-pub use reader::Reader;
